@@ -6,17 +6,18 @@ RPC client implementation.
 
 from __future__ import annotations
 
-from typing import Any, Callable, Awaitable
+from typing import Any, Awaitable, Callable
 
-from protocol.request import Request
 from protocol.event import Event
+from protocol.packet import Packet
+from protocol.request import Request
 from protocol.response import Response
 
 from .futures import FutureManager
 from .ids import generate_request_id
 
 
-Transport = Callable[[dict], Awaitable[None]]
+Transport = Callable[[Packet], Awaitable[None]]
 
 
 class Client:
@@ -31,7 +32,6 @@ class Client:
 
         self.futures = futures or FutureManager()
 
-
     async def call(
         self,
         method: str,
@@ -39,7 +39,6 @@ class Client:
         timeout: float = 30.0,
         **kwargs: Any,
     ) -> Any:
-
 
         request = Request(
             id=generate_request_id(),
@@ -49,23 +48,17 @@ class Client:
             timeout=timeout,
         )
 
-
         pending = self.futures.create(
             method=method,
             timeout=timeout,
             metadata={
-                "request_id": request.id
+                "request_id": request.id,
             },
         )
 
-
-        await self.transport(
-            request.to_dict()
-        )
-
+        await self.transport(request)
 
         return await pending.future
-
 
     async def emit(
         self,
@@ -73,23 +66,17 @@ class Client:
         data: Any = None,
     ) -> None:
 
-
         event = Event(
             name=name,
             data=data,
         )
 
-
-        await self.transport(
-            event.to_dict()
-        )
-
+        await self.transport(event)
 
     def handle_response(
         self,
         response: Response,
     ) -> None:
-
 
         if response.success:
 
@@ -102,7 +89,5 @@ class Client:
 
             self.futures.reject(
                 response.request_id,
-                Exception(
-                    response.error
-                ),
+                Exception(response.error),
             )
