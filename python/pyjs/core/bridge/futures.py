@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import uuid
 from time import monotonic
 
 from .models import PendingRequest
@@ -9,81 +8,91 @@ from .models import PendingRequest
 
 class FutureManager:
 
-    def __init__(self):
+    def __init__(self) -> None:
 
         self._pending: dict[str, PendingRequest] = {}
 
     def create(
         self,
+        request_id: str,
         method: str,
         timeout: float,
         metadata: dict | None = None,
     ) -> PendingRequest:
 
-        rid = uuid.uuid4().hex
-
         future = asyncio.get_running_loop().create_future()
 
         request = PendingRequest(
-            id=rid,
+            id=request_id,
             method=method,
             future=future,
             timeout=timeout,
             metadata=metadata or {},
         )
 
-        self._pending[rid] = request
+        self._pending[request_id] = request
 
         return request
 
-    def resolve(self, rid: str, value):
+    def resolve(
+        self,
+        request_id: str,
+        value,
+    ) -> None:
 
-        req = self._pending.pop(rid)
+        req = self._pending.pop(request_id)
 
         req.completed = True
 
         if not req.future.done():
             req.future.set_result(value)
 
-    def reject(self, rid: str, exc):
+    def reject(
+        self,
+        request_id: str,
+        exc,
+    ) -> None:
 
-        req = self._pending.pop(rid)
+        req = self._pending.pop(request_id)
 
         req.completed = True
 
         if not req.future.done():
             req.future.set_exception(exc)
 
-    def cancel(self, rid: str):
+    def cancel(
+        self,
+        request_id: str,
+    ) -> None:
 
-        req = self._pending.pop(rid)
+        req = self._pending.pop(request_id)
 
         req.cancelled = True
 
         if not req.future.done():
             req.future.cancel()
 
-    def expire(self):
+    def expire(self) -> None:
 
         now = monotonic()
 
-        expired = []
+        expired: list[str] = []
 
-        for rid, req in self._pending.items():
+        for request_id, req in self._pending.items():
 
             if now - req.created_at >= req.timeout:
 
-                expired.append(rid)
+                expired.append(request_id)
 
-        for rid in expired:
+        for request_id in expired:
 
-            self.cancel(rid)
+            self.cancel(request_id)
 
-    def pending(self):
+    def pending(self) -> tuple[PendingRequest, ...]:
 
         return tuple(self._pending.values())
 
-    def clear(self):
+    def clear(self) -> None:
 
         for req in self._pending.values():
 
