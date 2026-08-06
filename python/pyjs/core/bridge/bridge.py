@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from protocol.codec import JSONCodec
-from protocol.parser import PacketParser
+from ..protocol.codec import JSONCodec
+from ..protocol.parser import PacketParser
 
 from .client import Client
 from .connection import Connection
