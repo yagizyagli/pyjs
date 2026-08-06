@@ -3,10 +3,15 @@ Bridge public API.
 """
 
 from .bridge import Bridge
+
 from .client import Client
+
 from .server import Server
 
-from .router import Router, Route
+from .router import (
+    Router,
+    Route,
+)
 
 from .dispatcher import Dispatcher
 
@@ -17,15 +22,40 @@ from .middleware import (
 
 from .futures import FutureManager
 
+from .connection import Connection
+
+from .transport import (
+    Transport,
+    MemoryTransport,
+    WebSocketTransport,
+)
+
 
 __all__ = [
+
     "Bridge",
+
     "Client",
+
     "Server",
+
     "Router",
+
     "Route",
+
     "Dispatcher",
+
     "Middleware",
+
     "MiddlewarePipeline",
+
     "FutureManager",
+
+    "Connection",
+
+    "Transport",
+
+    "MemoryTransport",
+
+    "WebSocketTransport",
 ]
