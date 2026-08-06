@@ -1,75 +1,93 @@
-"""
-Pending request manager.
-"""
-
 from __future__ import annotations
 
 import asyncio
 import uuid
-from typing import Any
+from time import monotonic
+
+from .models import PendingRequest
 
 
 class FutureManager:
-    """
-    Stores pending RPC requests.
-    """
 
-    def __init__(self) -> None:
-        self._futures: dict[str, asyncio.Future[Any]] = {}
+    def __init__(self):
 
-    def create(self) -> tuple[str, asyncio.Future[Any]]:
-        request_id = str(uuid.uuid4())
+        self._pending: dict[str, PendingRequest] = {}
+
+    def create(
+        self,
+        method: str,
+        timeout: float,
+        metadata: dict | None = None,
+    ) -> PendingRequest:
+
+        rid = uuid.uuid4().hex
 
         future = asyncio.get_running_loop().create_future()
 
-        self._futures[request_id] = future
+        request = PendingRequest(
+            id=rid,
+            method=method,
+            future=future,
+            timeout=timeout,
+            metadata=metadata or {},
+        )
 
-        return request_id, future
+        self._pending[rid] = request
 
-    def resolve(self, request_id: str, result: Any) -> bool:
-        future = self._futures.pop(request_id, None)
+        return request
 
-        if future is None:
-            return False
+    def resolve(self, rid: str, value):
 
-        if not future.done():
-            future.set_result(result)
+        req = self._pending.pop(rid)
 
-        return True
+        req.completed = True
 
-    def reject(self, request_id: str, error: Exception) -> bool:
-        future = self._futures.pop(request_id, None)
+        if not req.future.done():
+            req.future.set_result(value)
 
-        if future is None:
-            return False
+    def reject(self, rid: str, exc):
 
-        if not future.done():
-            future.set_exception(error)
+        req = self._pending.pop(rid)
 
-        return True
+        req.completed = True
 
-    def cancel(self, request_id: str) -> bool:
-        future = self._futures.pop(request_id, None)
+        if not req.future.done():
+            req.future.set_exception(exc)
 
-        if future is None:
-            return False
+    def cancel(self, rid: str):
 
-        future.cancel()
+        req = self._pending.pop(rid)
 
-        return True
+        req.cancelled = True
 
-    def exists(self, request_id: str) -> bool:
-        return request_id in self._futures
+        if not req.future.done():
+            req.future.cancel()
 
-    def get(self, request_id: str) -> asyncio.Future[Any]:
-        return self._futures[request_id]
+    def expire(self):
 
-    def pending(self) -> int:
-        return len(self._futures)
+        now = monotonic()
 
-    def clear(self) -> None:
-        for future in self._futures.values():
-            if not future.done():
-                future.cancel()
+        expired = []
 
-        self._futures.clear()
+        for rid, req in self._pending.items():
+
+            if now - req.created_at >= req.timeout:
+
+                expired.append(rid)
+
+        for rid in expired:
+
+            self.cancel(rid)
+
+    def pending(self):
+
+        return tuple(self._pending.values())
+
+    def clear(self):
+
+        for req in self._pending.values():
+
+            if not req.future.done():
+                req.future.cancel()
+
+        self._pending.clear()
