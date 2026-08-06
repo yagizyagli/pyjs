@@ -29,26 +29,45 @@ class Bridge:
 
         self.router = Router()
 
-        self.dispatcher = Dispatcher(self.router)
+        self.dispatcher = Dispatcher(
+            self.router,
+        )
 
         self.middleware = MiddlewarePipeline()
 
-        self.parser = PacketParser(JSONCodec())
-
-        self.client = Client(transport.send)
-
-        self.server = Server(
-            dispatcher=self.dispatcher,
-            transport=transport.send,
-            middleware=self.middleware,
+        self.parser = PacketParser(
+            JSONCodec(),
         )
+
+        #
+        # Connection önce oluşturulur.
+        #
 
         self.connection = Connection(
             transport=transport,
             parser=self.parser,
-            client=self.client,
-            server=self.server,
         )
+
+        #
+        # Client artık Connection üzerinden gönderir.
+        #
+
+        self.client = Client(
+            self.connection.send,
+        )
+
+        self.server = Server(
+            dispatcher=self.dispatcher,
+            transport=self.connection.send,
+            middleware=self.middleware,
+        )
+
+        #
+        # Connection'a sonradan bağlanırlar.
+        #
+
+        self.connection.client = self.client
+        self.connection.server = self.server
 
     async def start(self) -> None:
         await self.connection.start()
@@ -73,27 +92,38 @@ class Bridge:
         name: str,
         namespace: str = "default",
     ) -> None:
-        self.router.unregister(name, namespace)
+        self.router.unregister(
+            name,
+            namespace,
+        )
 
     def on(
         self,
         event: str,
         handler: Callable[..., Any],
     ) -> None:
-        self.router.on(event, handler)
+        self.router.on(
+            event,
+            handler,
+        )
 
     def off(
         self,
         event: str,
         handler: Callable[..., Any],
     ) -> None:
-        self.router.off(event, handler)
+        self.router.off(
+            event,
+            handler,
+        )
 
     def use(
         self,
         middleware: Middleware,
     ) -> None:
-        self.middleware.add(middleware)
+        self.middleware.add(
+            middleware,
+        )
 
     async def call(
         self,
