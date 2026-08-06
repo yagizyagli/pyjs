@@ -1,117 +1,99 @@
 """
 bridge.bridge
 
-Main public Bridge API.
+Main Bridge API.
 """
 
 from __future__ import annotations
 
-from typing import Any, Callable, Awaitable
+from typing import Any, Callable
 
-from protocol.event import Event
+from protocol.codec import JSONCodec
+from protocol.parser import PacketParser
 
-from .router import Router
-from .dispatcher import Dispatcher
 from .client import Client
-from .server import Server
+from .connection import Connection
+from .dispatcher import Dispatcher
 from .middleware import Middleware, MiddlewarePipeline
-
-
-Transport = Callable[[dict[str, Any]], Awaitable[None]]
+from .router import Router
+from .server import Server
+from .transport.base import Transport
 
 
 class Bridge:
 
     def __init__(
         self,
-        transport: Transport | None = None,
+        transport: Transport,
     ) -> None:
 
         self.router = Router()
 
-        self.dispatcher = Dispatcher(
-            self.router
-        )
+        self.dispatcher = Dispatcher(self.router)
 
         self.middleware = MiddlewarePipeline()
 
-        self.client: Client | None = None
+        self.parser = PacketParser(JSONCodec())
 
-        self.server: Server | None = None
+        self.client = Client(transport.send)
 
+        self.server = Server(
+            dispatcher=self.dispatcher,
+            transport=transport.send,
+            middleware=self.middleware,
+        )
 
-        if transport:
+        self.connection = Connection(
+            transport=transport,
+            parser=self.parser,
+            client=self.client,
+            server=self.server,
+        )
 
-            self.client = Client(
-                transport
-            )
+    async def start(self) -> None:
+        await self.connection.start()
 
-            self.server = Server(
-                self.dispatcher,
-                transport,
-                self.middleware,
-            )
-
+    async def stop(self) -> None:
+        await self.connection.close()
 
     def expose(
         self,
         name: str,
-        handler: Callable,
+        handler: Callable[..., Any],
         namespace: str = "default",
     ):
-
         return self.router.register(
             name,
             handler,
             namespace,
         )
 
-
     def remove(
         self,
         name: str,
         namespace: str = "default",
-    ):
-
-        self.router.unregister(
-            name,
-            namespace,
-        )
-
+    ) -> None:
+        self.router.unregister(name, namespace)
 
     def on(
         self,
         event: str,
-        handler: Callable,
-    ):
-
-        self.router.on(
-            event,
-            handler,
-        )
-
+        handler: Callable[..., Any],
+    ) -> None:
+        self.router.on(event, handler)
 
     def off(
         self,
         event: str,
-        handler: Callable,
-    ):
-
-        self.router.off(
-            event,
-            handler,
-        )
-
+        handler: Callable[..., Any],
+    ) -> None:
+        self.router.off(event, handler)
 
     def use(
         self,
         middleware: Middleware,
-    ):
-
-        self.middleware.add(
-            middleware
-        )
-
+    ) -> None:
+        self.middleware.add(middleware)
 
     async def call(
         self,
@@ -119,52 +101,18 @@ class Bridge:
         *args: Any,
         **kwargs: Any,
     ) -> Any:
-
-        if self.client is None:
-
-            raise RuntimeError(
-                "Client transport is not configured."
-            )
-
-
         return await self.client.call(
             method,
             *args,
             **kwargs,
         )
 
-
     async def emit(
         self,
-        name: str,
+        event: str,
         data: Any = None,
-    ):
-
-        if self.client is None:
-
-            raise RuntimeError(
-                "Client transport is not configured."
-            )
-
-
+    ) -> None:
         await self.client.emit(
-            name,
+            event,
             data,
-        )
-
-
-    async def receive(
-        self,
-        packet,
-    ):
-
-        if self.server is None:
-
-            raise RuntimeError(
-                "Server transport is not configured."
-            )
-
-
-        await self.server.receive(
-            packet
         )
