@@ -8,10 +8,10 @@ from __future__ import annotations
 
 from typing import Any, Awaitable, Callable
 
-from protocol.event import Event
-from protocol.packet import Packet
-from protocol.request import Request
-from protocol.response import Response
+from ..protocol.event import Event
+from ..protocol.packet import Packet
+from ..protocol.request import Request
+from ..protocol.response import Response
 
 from .futures import FutureManager
 from .ids import generate_request_id
