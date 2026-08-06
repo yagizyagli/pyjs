@@ -40,8 +40,10 @@ class Client:
         **kwargs: Any,
     ) -> Any:
 
+        request_id = generate_request_id()
+
         request = Request(
-            id=generate_request_id(),
+            id=request_id,
             method=method,
             args=args,
             kwargs=kwargs,
@@ -49,11 +51,10 @@ class Client:
         )
 
         pending = self.futures.create(
+            request_id=request_id,
             method=method,
             timeout=timeout,
-            metadata={
-                "request_id": request.id,
-            },
+            metadata={},
         )
 
         await self.transport(request)
