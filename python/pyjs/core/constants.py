@@ -1,0 +1,21 @@
+"""
+Core constants for PyJS.
+"""
+
+DEFAULT_HOST = "127.0.0.1"
+DEFAULT_PORT = 8765
+
+DEFAULT_TIMEOUT = 30
+
+DEFAULT_SERIALIZER = "json"
+
+DEFAULT_TRANSPORT = "websocket"
+
+DEFAULT_LOG_LEVEL = "INFO"
+
+PROTOCOL_VERSION = "1.0"
+
+ENGINE_STOPPED = "stopped"
+ENGINE_STARTING = "starting"
+ENGINE_RUNNING = "running"
+ENGINE_STOPPING = "stopping"
