@@ -33,8 +33,11 @@ from .event import Event
 
 from .validator import PacketValidator
 
-from .protocol import Protocol
+from .manager import Protocol
 
+from .factory import PacketFactory
+
+from .parser import PacketParser
 
 from .codec import (
     Codec,
@@ -50,12 +53,10 @@ __all__ = [
     "PROTOCOL_VERSION",
     "SUPPORTED_VERSIONS",
 
-
     # Enums
     "PacketType",
     "PacketPriority",
     "PacketStatus",
-
 
     # Exceptions
     "ProtocolError",
@@ -65,21 +66,21 @@ __all__ = [
     "ValidationError",
     "CodecError",
 
-
     # Models
     "Packet",
     "Request",
     "Response",
     "Event",
 
-
     # Validation
     "PacketValidator",
-
 
     # Protocol
     "Protocol",
 
+    # Factory / Parser
+    "PacketFactory",
+    "PacketParser",
 
     # Codec
     "Codec",
