@@ -5,27 +5,24 @@ import logging
 import websockets
 from typing import Callable, Dict, Any, List, Optional
 
-# Setup high-performance professional logging infrastructure
+# Setup professional logging infrastructure
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("PyJS")
 
 class PyJS:
     """
     10/10 Rated Production-Ready Python-to-JS Bridge Core Engine.
-    Supports asynchronous orchestration, payload validation, and system telemetry.
+    Strictly locked to IPv4 loopback for absolute connection stability.
     """
-    def __init__(self, host: str = "localhost", port: int = 8765):
-        self.host = host
+    def __init__(self, host: str = "127.0.0.1", port: int = 8765):
+        self.host = "127.0.0.1" # Explicit IPv4 lock to prevent network resolution drops
         self.port = port
-        self.functions: Dict[str, Callable] = {}
+        self.functions: Dict[str, Any] = {}
         self.version = "1.0.0-FINAL"
         self.metrics = {"total_calls": 0, "failed_calls": 0, "start_time": time.time()}
 
     def register(self, name: str = None, schema: Optional[Dict[str, Any]] = None) -> Callable:
-        """
-        Registers a Python function to be safely callable from the JS/TS client layer.
-        Optionally enforces an input validation schema.
-        """
+        """Registers a Python function to be safely callable from the JS/TS client."""
         def decorator(func: Callable) -> Callable:
             func_name = name or func.__name__
             self.functions[func_name] = {"exec": func, "schema": schema}
@@ -34,7 +31,7 @@ class PyJS:
         return decorator
 
     def _validate_payload(self, func_name: str, args: List[Any]) -> Optional[str]:
-        """Validates incoming client argument lengths and basic structures."""
+        """Validates incoming client argument lengths based on schema."""
         schema = self.functions[func_name]["schema"]
         if not schema:
             return None
@@ -55,7 +52,6 @@ class PyJS:
                 kwargs = request.get("kwargs", {})
 
                 if func_name in self.functions:
-                    # Execute payload architecture validations
                     error_msg = self._validate_payload(func_name, args)
                     if error_msg:
                         raise ValueError(error_msg)
