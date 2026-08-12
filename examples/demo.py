@@ -1,32 +1,29 @@
-import { PyJSBridge } from '../src/Bridge';
+import sys
+import os
+import asyncio
 
-async function runDemo() {
-    // Instantiate the resilient bridge client
-    const bridge = new PyJSBridge("localhost", 8765);
+# Absolute baseline injection to guarantee modular lookups across local trees
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from python.pyjs import PyJS
 
-    // Setup framework lifecycle event listeners
-    bridge.on("open", () => console.log("🚀 Connection verified via Event Emitter!"));
-    bridge.on("close", () => console.warn("⚠️ Pipeline disconnected. Triggering auto-reconnect..."));
+# Initialize the bridge server on standard 127.0.0.1
+bridge = PyJS()
 
-    try {
-        // Connect to the Python backbone server
-        await bridge.connect();
+# Scenario 1: A simple synchronous mathematical function
+@bridge.register()
+def basic_add(x: int, y: int) -> int:
+    return x + y
 
-        // Execution 1: Trigger the synchronous math function
-        console.log("Calling 'basic_add' on Python side...");
-        const mathResult = await bridge.call<number>("basic_add", [25, 35]);
-        console.log(`Result from Python: ${mathResult}`); // Should log 60
-
-        // Execution 2: Trigger the complex asynchronous engine with dictionary payloads
-        console.log("\nCalling 'heavy_data_process' on Python side...");
-        const mockPayload = { items: ["token_a", "token_b", "token_c"], security_level: "HIGH" };
-        
-        const processResult = await bridge.call<any>("heavy_data_process", ["usr_9921", mockPayload]);
-        console.log("Deep System Response from Python:", JSON.stringify(processResult, null, 2));
-
-    } catch (error) {
-        console.error("Critical Execution Interrupted:", error);
+# Scenario 2: An advanced asynchronous data processor with schema enforcement
+@bridge.register(schema={"min_args": 2})
+async def heavy_data_process(user_id: str, payload: dict) -> dict:
+    print(f"[Demo Task] Processing heavy async operation for User: {user_id}")
+    await asyncio.sleep(1) # Simulate real-world database or I/O lag
+    return {
+        "status": "PROCESSED",
+        "processed_items": len(payload.get("items", [])),
+        "system_telemetry": bridge.get_telemetry()
     }
-}
 
-runDemo();
+if __name__ == "__main__":
+    bridge.start()
