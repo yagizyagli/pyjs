@@ -5,7 +5,7 @@ from typing import Callable, Dict, Any
 
 class PyJS:
     """
-    10/10 Rated Architectural Production-Ready Python-to-JS Bridge Core Server.
+     Rated Architectural Production-Ready Python-to-JS Bridge Core Server.
     """
     def __init__(self, host: str = "localhost", port: int = 8765):
         self.host = host
@@ -61,7 +61,7 @@ class PyJS:
             print("\n[PyJS] Server shut down gracefully.")
 
 # ==========================================
-# 10/10 ARCHITECTURE RATIO & USAGE SIMULATION
+# ARCHITECTURE RATIO & USAGE SIMULATION
 # ==========================================
 if __name__ == "__main__":
     bridge = PyJS()
