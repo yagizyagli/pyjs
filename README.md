@@ -2,7 +2,7 @@
 
 A lightweight, ultra-fast, and zero-dependency asynchronous Python-to-JavaScript/TypeScript FFI (Foreign Function Interface) bridge powered by native WebSockets.
 
-[CI Status](https://github.com/yagizyagli/pyjs/blob/main/.github/workflows/ci.yml)
+[CI Status](https://github.com/yagizyagli/pyjs/blob/main/.github/workflows/ci.yml) &
 [Repo](https://github.com/yagizyagli/pyjs)
 ---
 
