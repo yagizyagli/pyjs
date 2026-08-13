@@ -81,7 +81,7 @@ class PyJS:
             "uptime_seconds": round(uptime, 2),
             "total_calls_processed": self.metrics["total_calls"],
             "failed_calls_count": self.metrics["failed_calls"],
-            "success_rate_percentage": round(((self.metrics["total_calls"] - self.metrics["failed_calls"]) / max(1, self.metrics["total_calls"])) * 100, 2),
+            "success_rate_percentage": round(((self.metrics["total_calls"] - self.metrics["failed_calls"]) / max(1, self.metrics["total_calls"])) * 100, 2) if self.metrics["total_calls"] > 0 else 100.0,
             "architecture_score": "10.0 / 10.0"
         }
 
