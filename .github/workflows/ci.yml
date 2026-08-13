@@ -26,4 +26,4 @@ jobs:
 
     - name: Execute Automated Core Infrastructure Tests
       run: |
-        pytest python/tests/
+        PYTHONPATH=. pytest python/tests/
