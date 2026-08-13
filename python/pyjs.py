@@ -11,7 +11,7 @@ logger = logging.getLogger("PyJS")
 
 class PyJS:
     """
-    Rated Production-Ready Python-to-JS Bridge Core Engine.
+    Production-Ready Python-to-JS Bridge Core Engine.
     Strictly locked to IPv4 loopback for absolute connection stability.
     """
     def __init__(self, host: str = "127.0.0.1", port: int = 8765):
