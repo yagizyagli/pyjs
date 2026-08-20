@@ -79,4 +79,4 @@ console.log(score.status); // "FINAL"
 This project is licensed under the MIT License.
 
 ## Author
-Yağız Yağlı (https://github.com/yagizyagli)
+[Yağız Yağlı](https://github.com/yagizyagli)
